@@ -1,10 +1,16 @@
-local versionInfo = "KISS Telemetry Data - v1.2.4"
+local versionInfo = "KISS Telemetry Data - v1.3.1"
+local settingsFile = '/SCRIPTS/TELEMETRY/KISSuser.dat'
 
 local blnMenuMode = 0
+local intMenu = 0 -- used for menu screens
 
 -- mahTarget is used to set our target mah consumption and mahAlertPerc is used for division of alerts
 local mahTarget = 900
 local mahAlertPerc = 10
+
+local userData = {}
+    userData.mahTarget = 0
+
 
 -- OpenTX 2.0 - Percent Unit = 8 // OpenTx 2.1 - Percent Unit = 13
 -- see: https://opentx.gitbooks.io/opentx-lua-reference-guide/content/general/playNumber.html
@@ -94,10 +100,35 @@ local function draw()
 end
 
 
+local function readUserMah()
+  fileIO = io.open(settingsFile,'r')
+  if fileIO ~= nil then
+    local tmpStr = io.read(fileIO, 10)
+    tmpStr =   userData.mahTarget
+  end  
+end
+
+
+local function saveUserMah(mah)
+  fileIO = io.open(settingsFile,'w')
+  if fileIO ~= nil then
+    io.write(fileIO,mah)
+    io.close(fileIO)
+  end
+end
+
+
+
+
+
 ----------------------------------------------------------------
 --
 ----------------------------------------------------------------
 local function init_func()
+
+  -- load our settings file data
+  userMah = readUserMah()
+
   doMahAlert()
 end
 --------------------------------
@@ -119,18 +150,16 @@ end
 ----------------------------------------------------------------
 local function run_func(event)
 
-
-
-
+-- Menu Mode
   if blnMenuMode == 1 then
-    --We are in our menu mode
+    -- We are in menu mode
 
-    if event == 32 then
-      --Take us out of menu mode
-        blnMenuMode = 0
-    end
+    if intMenu == 0 then    -- FIRST SCREEN
+      if event == 32 then
+          intMenu = 1
+      end
 
-    -- Respond to user KeyPresses for mahSetup
+      -- Respond to user KeyPresses for mahSetup
       if event == EVT_PLUS_FIRST then
         mahAlertPerc = mahAlertPerc + 1
       end
@@ -149,22 +178,51 @@ local function run_func(event)
         mahAlertPerc = mahAlertPerc - 1
       end
 
+      lcd.clear()
 
-    lcd.clear()
+      lcd.drawScreenTitle(versionInfo,2,3)
+      lcd.drawText(35,10, "Set Percentage Notification")
+      lcd.drawText(70,20,"Every "..mahAlertPerc.." %",MIDSIZE)
+      lcd.drawText(66, 35, "Use +/- to change",SMLSIZE)
 
-    lcd.drawScreenTitle(versionInfo,2,2)
-    lcd.drawText(35,10, "Set Percentage Notification")
-    lcd.drawText(70,20,"Every "..mahAlertPerc.." %",MIDSIZE)
-    lcd.drawText(66, 35, "Use +/- to change",SMLSIZE)
+      lcd.drawText(60, 55, "Press [MENU] to return",SMLSIZE)
 
-    lcd.drawText(60, 55, "Press [MENU] to return",SMLSIZE)
+    elseif intMenu == 1 then   -- SECOND SCREEN
 
-  else
+      lcd.clear()
 
-  if event == 32 then
-    --Put us in menu mode
-      blnMenuMode = 1
-  end
+
+
+
+
+      result = popupInput('Set target mAh using [+/-]  '..userData.mahTarget,event,userData.mahTarget,0,10000)
+      if result == "OK" then
+          saveUserMah(userData.mahTarget)
+          lcd.clear()
+          blnMenuMode = 0
+      elseif result == "CANCEL" then
+          lcd.clear()
+          blnMenuMode = 0
+      else
+        userData.mahTarget = result
+        lcd.drawScreenTitle(versionInfo,3,3)
+      end
+
+
+
+      -- Second Screen
+      if event == 32 then
+        --Take us out of menu mode
+        blnMenuMode = 0
+      end
+    end
+  else    -- MAIN SCREEN
+    -- we are not in menu mode
+    if event == 32 then
+      -- Put us in menu mode
+        blnMenuMode = 1
+        intMenu = 0
+    end
 
     -- Respond to user KeyPresses for mahSetup
       if event == EVT_PLUS_FIRST then
@@ -187,7 +245,7 @@ local function run_func(event)
     --Update our screen
       lcd.clear()
 
-      lcd.drawScreenTitle(versionInfo,1,2)
+      lcd.drawScreenTitle(versionInfo,1,3)
 
       lcd.drawGauge(6, 25, 70, 20, percVal, 100)
       lcd.drawText(130, 10, "Target mAh : ",MIDSIZE)
@@ -198,8 +256,9 @@ local function run_func(event)
 
       draw()
       doMahAlert()
-  end
 
+  end
+  -- End Menu
 end
 --------------------------------
 
