@@ -1,4 +1,4 @@
-local versionInfo = "KISS Telemetry Data - v1.2.4"
+local versionInfo = "KISS Telemetry Data - v1.3.0"
 
 local blnMenuMode = 0
 
@@ -12,6 +12,8 @@ local percentUnit = 13
 
 local lastMahAlert = 0
 
+-- Fixes mahAlert not appearing after battery disconnect
+local lastKnownMah = 0
 
 ----------------------------------------------------------------
 -- Custom Functions
@@ -75,10 +77,19 @@ end
 local function drawAlerts()
 
   percVal = 0
-  curMah = getValue(data.fuelUsed)
-  percVal =  round(((curMah/mahTarget) * 100),0)
 
-  lcd.drawText(5, 10, "USED: "..curMah.."mah" , MIDSIZE)
+  -- Added to fix mah reseting to Zero on battery disconnects
+  tmpMah = getValue(data.fuelUsed)
+
+  if tmpMah ~= 0 then
+    lastKnownMah = tmpMah
+  end
+
+  -- The display of MAH data is now pulled from the lastKnownMah var which will only
+  -- be reset on Telemetry reset now.
+  
+  percVal =  round(((lastKnownMah/mahTarget) * 100),0)
+  lcd.drawText(5, 10, "USED: "..lastKnownMah.."mah" , MIDSIZE)
   lcd.drawText(90, 30, percVal.." %" , MIDSIZE)
 
 end
