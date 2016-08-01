@@ -33,4 +33,5 @@ On the main screen of the script, you may adjust the target mAh at anytime using
 Percentages Notification adjust may be accessed by pressing the [MENU] key.  On the Percentages Notification Screen you may adjust the Percentage using the +/- keys.  Pressing the [MENU] key again will bring you back to the main screen of this script.
 
 # Known Issues:
-The Telemetry data is not visible for viewing after RSSI loss (ie pilot lands and disconnects battery from multi rotor)
+ - NONE AT THIS TIME - 
+- FIXED IN v.1.3.0 - The Telemetry data is not visible for viewing after RSSI loss (ie pilot lands and disconnects battery from multi rotor)
