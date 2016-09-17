@@ -3,8 +3,8 @@ local versionInfo = "KISS Telemetry Data - v1.3.0"
 local blnMenuMode = 0
 
 -- mahTarget is used to set our target mah consumption and mahAlertPerc is used for division of alerts
-local mahTarget = 900
-local mahAlertPerc = 10
+local mahTarget = 1100
+local mahAlertPerc = 20
 
 -- OpenTX 2.0 - Percent Unit = 8 // OpenTx 2.1 - Percent Unit = 13
 -- see: https://opentx.gitbooks.io/opentx-lua-reference-guide/content/general/playNumber.html
@@ -26,6 +26,7 @@ end
 
 local data = {}
   data.fuelUsed = getTelemetryId("Fuel")
+  data.volts = getTelemetryId("VFAS")
 
 
 -------------------------------------------------------------------------
@@ -85,12 +86,15 @@ local function drawAlerts()
     lastKnownMah = tmpMah
   end
 
+  tmpVolts = round(getValue(data.volts), 2)
+
   -- The display of MAH data is now pulled from the lastKnownMah var which will only
   -- be reset on Telemetry reset now.
   
   percVal =  round(((lastKnownMah/mahTarget) * 100),0)
   lcd.drawText(5, 10, "USED: "..lastKnownMah.."mah" , MIDSIZE)
   lcd.drawText(90, 30, percVal.." %" , MIDSIZE)
+  lcd.drawText(150, 25, tmpVolts.." V",MIDSIZE)
 
 end
 
@@ -201,13 +205,11 @@ local function run_func(event)
       lcd.drawScreenTitle(versionInfo,1,2)
 
       lcd.drawGauge(6, 25, 70, 20, percVal, 100)
-      lcd.drawText(130, 10, "Target mAh : ",MIDSIZE)
-      lcd.drawText(160, 25, mahTarget,MIDSIZE)
+      lcd.drawText(130, 10, "Target mAh : "..mahTarget,SMLSIZE)
       lcd.drawText(130, 40, "Use +/- to change",SMLSIZE)
 
       lcd.drawText(30, 55, "Press [MENU] for more options",SMLSIZE)
 
-      draw()
       doMahAlert()
   end
 
